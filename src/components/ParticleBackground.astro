@@ -1,0 +1,239 @@
+---
+---
+
+<canvas id="particleCanvas" class="absolute inset-0 w-full h-full opacity-90"></canvas>
+
+<script>
+    // パフォーマンス最適化のためのRequestAnimationFrame管理
+    let rafId = null;
+    let isVisible = true;
+
+    // Intersection Observer for canvas visibility
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            isVisible = entry.isIntersecting;
+            if (isVisible && !rafId) {
+                animate();
+            }
+        });
+    }, { threshold: 0.1 });
+
+    class Particle {
+        constructor(canvas, ctx, x, y) {
+            this.canvas = canvas;
+            this.ctx = ctx;
+            this.x = x || Math.random() * this.canvas.width;
+            this.y = y || Math.random() * this.canvas.height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedX = Math.random() * 0.2 - 0.1;
+            this.speedY = Math.random() * 0.2 - 0.1;
+            this.life = Math.random() * 0.5 + 0.5;
+            this.maxLife = this.life;
+            this.opacity = Math.random() * 0.4 + 0.2;
+            this.mode = Math.random() > 0.85 ? 'vortex' : 'float';
+            this.angle = Math.random() * Math.PI * 2;
+            this.angleSpeed = (Math.random() * 0.001 - 0.0005) * (Math.random() > 0.5 ? 1 : -1);
+            this.distance = Math.random() * 150 + 50;
+            this.centerX = this.x;
+            this.centerY = this.y;
+            this.vx = 0;
+            this.vy = 0;
+            this.acceleration = 0.005;
+        }
+
+        update(mouseX, mouseY) {
+            if (this.mode === 'vortex') {
+                this.angle += this.angleSpeed;
+                const targetX = this.centerX + Math.cos(this.angle) * this.distance;
+                const targetY = this.centerY + Math.sin(this.angle) * this.distance;
+                
+                this.vx += (targetX - this.x) * this.acceleration;
+                this.vy += (targetY - this.y) * this.acceleration;
+                
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+            } else {
+                this.speedY += (Math.random() - 0.5) * 0.01;
+                this.speedX += (Math.random() - 0.5) * 0.01;
+                
+                this.speedX = Math.max(Math.min(this.speedX, 0.2), -0.2);
+                this.speedY = Math.max(Math.min(this.speedY, 0.2), -0.2);
+                
+                this.x += this.speedX;
+                this.y += this.speedY;
+                
+                if (this.x < 0 || this.x > this.canvas.width) {
+                    this.speedX *= -0.8;
+                    this.x = Math.max(0, Math.min(this.x, this.canvas.width));
+                }
+                if (this.y < 0 || this.y > this.canvas.height) {
+                    this.speedY *= -0.8;
+                    this.y = Math.max(0, Math.min(this.y, this.canvas.height));
+                }
+            }
+
+            if (mouseX && mouseY) {
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const maxDistance = 150;
+                
+                if (distance < maxDistance) {
+                    const force = (1 - distance / maxDistance) * 0.03;
+                    this.x -= dx * force;
+                    this.y -= dy * force;
+                }
+            }
+
+            this.life -= 0.001;
+            if (this.life <= 0) this.reset();
+            return true;
+        }
+
+        draw(ctx) {
+            const opacity = (this.life / this.maxLife) * this.opacity;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.fill();
+        }
+
+        reset(x, y) {
+            this.x = x || Math.random() * this.canvas.width;
+            this.y = y || Math.random() * this.canvas.height;
+            this.life = Math.random() * 0.5 + 0.5;
+            this.maxLife = this.life;
+        }
+    }
+
+    class ParticleSystem {
+        constructor() {
+            this.canvas = document.getElementById('particleCanvas');
+            this.ctx = this.canvas.getContext('2d', {
+                alpha: true,
+                desynchronized: true // パフォーマンス向上のためデスクロナイズを有効化
+            });
+            this.particles = [];
+            this.mouseX = null;
+            this.mouseY = null;
+            this.resizeCanvas();
+            this.init();
+            this.addEventListeners();
+            
+            // Observe canvas visibility
+            observer.observe(this.canvas);
+        }
+
+        init() {
+            const particleCount = Math.min(
+                Math.floor((this.canvas.width * this.canvas.height) / 15000),
+                100 // パーティクル数を制限
+            );
+            
+            // Object poolingでパーティクルを事前生成
+            this.particles = new Array(particleCount);
+            for (let i = 0; i < particleCount; i++) {
+                this.particles[i] = new Particle(this.canvas, this.ctx);
+            }
+        }
+
+        resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = this.canvas.getBoundingClientRect();
+            
+            this.canvas.width = rect.width * dpr;
+            this.canvas.height = rect.height * dpr;
+            
+            this.ctx.scale(dpr, dpr);
+            this.canvas.style.width = `${rect.width}px`;
+            this.canvas.style.height = `${rect.height}px`;
+        }
+
+        addEventListeners() {
+            // Throttleされたリサイズハンドラ
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                if (resizeTimeout) clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    this.resizeCanvas();
+                }, 200);
+            });
+
+            // Throttleされたマウス移動ハンドラ
+            let lastMove = 0;
+            this.canvas.addEventListener('mousemove', (e) => {
+                const now = Date.now();
+                if (now - lastMove > 16) { // ~60fps
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                    this.mouseY = e.clientY - rect.top;
+                    lastMove = now;
+                }
+            });
+
+            this.canvas.addEventListener('mouseleave', () => {
+                this.mouseX = null;
+                this.mouseY = null;
+            });
+        }
+
+        update() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // バッチ処理でパーティクルを更新
+            const len = this.particles.length;
+            for (let i = 0; i < len; i++) {
+                const particle = this.particles[i];
+                if (particle.update(this.mouseX, this.mouseY)) {
+                    particle.draw(this.ctx);
+                }
+            }
+
+            // 接続線の描画を最適化
+            for (let i = 0; i < len; i += 2) {
+                const p1 = this.particles[i];
+                for (let j = i + 2; j < Math.min(i + 6, len); j += 2) {
+                    const p2 = this.particles[j];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const maxDistance = 100;
+
+                    if (distance < maxDistance) {
+                        const opacity = Math.pow(1 - distance / maxDistance, 2) * 0.2;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(p1.x, p1.y);
+                        this.ctx.lineTo(p2.x, p2.y);
+                        this.ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                        this.ctx.lineWidth = 0.5;
+                        this.ctx.stroke();
+                    }
+                }
+            }
+        }
+    }
+
+    function animate() {
+        if (!isVisible) {
+            rafId = null;
+            return;
+        }
+        particleSystem.update();
+        rafId = requestAnimationFrame(animate);
+    }
+
+    // Defer initialization
+    let particleSystem;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            particleSystem = new ParticleSystem();
+            animate();
+        });
+    } else {
+        particleSystem = new ParticleSystem();
+        animate();
+    }
+</script>

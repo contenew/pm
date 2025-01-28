@@ -1,14 +1,45 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="description" content="Professional Product Management Consultant - Helping businesses grow through strategic product management" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
 	</head>
 	<body>
+		<header class="fixed w-full bg-white shadow-sm z-50">
+			<nav class="container mx-auto px-4 py-4">
+				<div class="flex justify-between items-center">
+					<a href="/" class="text-xl font-bold text-indigo-600">PM Consultant</a>
+					<ul class="flex space-x-8">
+						<li><a href="#about" class="hover:text-indigo-600 transition-colors">About</a></li>
+						<li><a href="#services" class="hover:text-indigo-600 transition-colors">Services</a></li>
+						<li><a href="#case-studies" class="hover:text-indigo-600 transition-colors">Case Studies</a></li>
+						<li><a href="#contact" class="hover:text-indigo-600 transition-colors">Contact</a></li>
+					</ul>
+				</div>
+			</nav>
+		</header>
+
 		<slot />
+
+		<footer class="bg-gray-100">
+			<div class="container mx-auto px-4 py-8">
+				<div class="text-center text-gray-600">
+					<p>&copy; 2025 Product Management Consultant. All rights reserved.</p>
+				</div>
+			</div>
+		</footer>
 	</body>
 </html>
 

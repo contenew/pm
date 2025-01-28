@@ -1,0 +1,151 @@
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.03;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.015;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.03;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.cosmos-bg {
+  background: #000000;
+  position: relative;
+  overflow: hidden;
+}
+
+.cosmos-bg::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: radial-gradient(circle at center, transparent 0%, #000 70%),
+              radial-gradient(circle at 30% 50%, #ffffff02 0%, transparent 30%),
+              radial-gradient(circle at 70% 50%, #ffffff02 0%, transparent 30%),
+              radial-gradient(circle at 50% 20%, #ffffff01 0%, transparent 40%),
+              radial-gradient(circle at 50% 80%, #ffffff01 0%, transparent 40%);
+  transform-origin: center;
+  animation: pulse 8s ease-in-out infinite;
+}
+
+.cosmos-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, #ffffff03 1px, transparent 1px),
+    linear-gradient(to bottom, #ffffff03 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
+}
+
+.cosmos-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffffff05,
+    transparent
+  );
+  animation: shimmer 5s infinite;
+  transform: skewX(-15deg);
+}
+
+.floating-cosmos {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #ffffff05, transparent 70%);
+  animation: float 8s ease-in-out infinite;
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glow {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.gradient-bg {
+  background: linear-gradient(-45deg, #111111, #222222, #333333, #222222);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.pulsing {
+  animation: pulse 4s ease-in-out infinite;
+}
+
+.noise-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+}
+
+.grid-pattern {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+.hero-pattern {
+  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 70%),
+                    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+}
